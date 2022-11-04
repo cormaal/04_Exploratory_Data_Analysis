@@ -1,0 +1,39 @@
+---
+title: "M4_W1_L1_Graphs"
+author: "Alexander Cormack"
+date: "4 November 2022"
+output: html_document
+---
+
+# Principles of Analytic Graphics
+
+## Principle 1: Show comparisons
+
+- Evidence for a hypothesis is always relative to another competing hypothesis
+- Always ask: "Compared to What?"
+
+## Principle 2: Show causality, mechanism, explanation, systematic structure
+
+- What is your causal framework for thinking about a question?
+
+## Principle 3: Show multivariate data
+
+- Multivariate = more than 2 variables
+- The real world is multivariate
+- Need to "escape flatland"
+
+(TIMESTAMP 12:08)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
