@@ -7,6 +7,7 @@ output: html_document
 
 # Principles of Analytic Graphics
 
+
 ## Principle 1: Show comparisons
 
 - Evidence for a hypothesis is always relative to another competing hypothesis
@@ -22,18 +23,181 @@ output: html_document
 - The real world is multivariate
 - Need to "escape flatland"
 
-(TIMESTAMP 12:08)
+## Principle 4: Integration of evidence
+
+- Completely integrate words, numbers, images, diagrams
+- Data graphics should make use of many modes of data presentation
+- Don't let the tool drive the analysis
+
+## Principle 5: Describe and document the evidence with appropriate labels, scales, sources, etc.
+
+- A data graphic should tell a complete story that is credible
+
+## Content is king
+
+- Analytical presentations ultimately stand or fall depending on the quality, relevance and integrity of their content
+
+
+# Exploratory Graphs (Part 1)
+
+## Why do we use graphs in data analysis?
+
+- To understand data properties (exploratory graphs)
+- To find patterns in data (exploratory graphs)
+- To suggest modeling strategies (exploratory graphs)
+- To "debug" analyses (exploratory graphs)
+- To communicate results
+
+
+## Characterics of exploratory graphs
+
+- They are made quickly
+- A large number are made
+- The goal is for personal understanding
+- Axes/legends are generally cleaned up later
+- Colour/size are primarily for information
+
+
+## Air Pollution in the United States
+
+For this lecture we will be looking at some US air pollution data.
+
+The data has been collected from https://aqs.epa.gov/aqsweb/airdata/download_files.html
+
+The exact data set used was unavailable, so I have made an approximation by collecting, merging and summarising similar data. Creating the "Region" column was fun!
+
+Here we are looking at the average fine particle pollution (PM2.5) per County across 2008-2010.
+
+According to the US standards, levels should not exceed 12 micrograms per cubic metre.
+
+
+```{r}
+library(data.table)
+library(dplyr)
+
+pollution_2008 <- fread("./data/daily_88101_2008.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
+pollution_2009 <- fread("./data/daily_88101_2009.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
+pollution_2010 <- fread("./data/daily_88101_2010.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
+pollution <- rbind(pollution_2008, pollution_2009, pollution_2010)
+
+states <- pollution$state
+
+northeast <- c("Connecticut", "Maine", "Massachusetts", "New Hampshire", "Rhode Island", "Vermont", "New Jersey", "New York", "Pennsylvania")
+midwest <- c("Illinois", "Indiana", "Michigan", "Ohio", "Wisconsin", "Iowa", "Kansas", "Minnesota", "Missouri", "Nebraska", "North Dakota", "South Dakota")
+south <- c("Delaware", "Florida", "Georgia", "Maryland", "North CArolina", "South Carolina", "Virginia", "District Of Columbia", "West Virginia", "Alabama", "Kentucky", "Mississippi", "Tennessee", "Arkansas", "Louisiana", "Oklahoma", "Texas")
+west <- c("Arizona", "Colorado", "Idaho", "Montana", "Nevada", "New Mexico", "Utah", "Wyoming", "Alaska", "California", "Hawaii", "Oregon", "Washington")
+other <- c("Puerto Rico", "Virgin Islands")
+
+pollution <- pollution %>%
+        mutate(region = case_when(
+                state %in% northeast ~ "Northeast",
+                state %in% midwest ~ "Midwest",
+                state %in% south ~ "South",
+                state %in% west ~ "West",
+                state %in% other ~ "Other"
+        )
+        ) %>%
+        group_by(county, state, region) %>%
+        summarise(meanPM2.5 = mean(PM2.5))
+head(pollution)
+```
+
+## Simple summaries of data
+
+One dimension
+
+- five number summary
+- boxplots
+- histograms
+- density plot
+- barplot
+
+# Five number summary
+
+```{r}
+summary(pollution$meanPM2.5)
+```
+
+This summary tells us that on average US counties are within the standard. However the maximimum values is above the 12 micrograms per cubic metre, so at least some counties are violating the standard.
+
+# Boxplot
+
+```{r}
+boxplot(pollution$meanPM2.5, col = "blue")
+```
+Like the summary function, this shows us that the mean is around about ten, there are some counties not in compliance but most of them are.
+
+# Histogram
+
+```{r}
+hist(pollution$meanPM2.5, col = "green")
+rug(pollution$meanPM2.5)
+```
+
+The histogram gives a little bit more information about the distribution of the data. The "rug" plots all of the points below the histogram so you can see exactly where they are. This lets you see where the bulk of the data and the outliers are.
+
+You can change the number of breaks in the histogram to make the bars narrower and give a little more detail to the data distribution.
+
+```{r}
+hist(pollution$meanPM2.5, col = "green", breaks = 100)
+rug(pollution$meanPM2.5)
+```
+
+# Overlaying features
+
+Here is the previous boxplot with an overlying feature, i.e. a line indicating the compliance threshold.
+
+This helps give an idea of the number of counties not in compliance, i.e. we can see that more than 75% (the upper edge of the blue box) are in compliance
+
+```{r}
+boxplot(pollution$meanPM2.5, col = "blue")
+abline(h = 12)
+```
+
+We can do the same with the histogram. Here we also add a magenta line to show the median (not needed in the boxplot because the median line is already a feature)
+
+```{r}
+hist(pollution$meanPM2.5, col = "green")
+abline(v = 12, lwd = 2)
+abline(v = median(pollution$meanPM2.5), col = "magenta", lwd = 4)
+```
+
+# Barplot
+
+Barplots can be useful for summarising categorical variables
+
+```{r}
+barplot(table(pollution$region), col = "wheat", main = "Number of regions")
+```
+
+# Exploratory Graphs (Part 2)
+
+
+## Simple summaries of data
+
+Two dimensions
+
+- multiple/overlayed 1-D plots (lattice/ggplot2)
+- scatterplots
+- smoothscatterplots
+
+More than 2 dimensions
+
+- overlayed/multiple 2-D plots; coplots
+- use color, size, shape to add dimensions
+- spinning plots
+- actual 3-D plots (not that useful)
+
+### Multiple boxplots
+
+Here is one way to look at two dimensional data. In one dimension we have the region data and in the other we have the mean PM2.5 variable.
+
+It is kind of interesting to note that the average values are generally lower in the West, but that it also has a larger spread (outliers).
+
+```{r}
+boxplot(meanPM2.5 ~ region, data = pollution, col = "red")
+```
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+(Timestamp 1:45)
