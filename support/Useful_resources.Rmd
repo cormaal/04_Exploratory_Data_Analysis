@@ -10,7 +10,12 @@ output: html_document
 Edward Tufte (2006). *Beautiful Evidence*, Graphics Press LLC. www.edwardtufte.com
 
 
+R Graph Gallery
+
+https://r-graph-gallery.com/
 
 
+R Bloggers
 
+https://www.r-bloggers.com/
 
