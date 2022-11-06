@@ -75,12 +75,10 @@ According to the US standards, levels should not exceed 12 micrograms per cubic 
 library(data.table)
 library(dplyr)
 
-pollution_2008 <- fread("./data/daily_88101_2008.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
-pollution_2009 <- fread("./data/daily_88101_2009.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
-pollution_2010 <- fread("./data/daily_88101_2010.csv", select = c(26, 17, 25), col.names = c("county", "PM2.5", "state"))
-pollution <- rbind(pollution_2008, pollution_2009, pollution_2010)
-
-states <- pollution$state
+pollution_2008 <- fread("./data/daily_88101_2008.csv", select = c(26, 17, 25, 6, 7), col.names = c("county", "PM2.5", "state", "latitude", "longitude"))
+pollution_2009 <- fread("./data/daily_88101_2009.csv", select = c(26, 17, 25, 6, 7), col.names = c("county", "PM2.5", "state", "latitude", "longitude"))
+pollution_2010 <- fread("./data/daily_88101_2010.csv", select = c(26, 17, 25, 6, 7), col.names = c("county", "PM2.5", "state", "latitude", "longitude"))
+pollution_all_years <- rbind(pollution_2008, pollution_2009, pollution_2010)
 
 northeast <- c("Connecticut", "Maine", "Massachusetts", "New Hampshire", "Rhode Island", "Vermont", "New Jersey", "New York", "Pennsylvania")
 midwest <- c("Illinois", "Indiana", "Michigan", "Ohio", "Wisconsin", "Iowa", "Kansas", "Minnesota", "Missouri", "Nebraska", "North Dakota", "South Dakota")
@@ -88,7 +86,7 @@ south <- c("Delaware", "Florida", "Georgia", "Maryland", "North CArolina", "Sout
 west <- c("Arizona", "Colorado", "Idaho", "Montana", "Nevada", "New Mexico", "Utah", "Wyoming", "Alaska", "California", "Hawaii", "Oregon", "Washington")
 other <- c("Puerto Rico", "Virgin Islands")
 
-pollution <- pollution %>%
+pollution <- pollution_all_years %>%
         mutate(region = case_when(
                 state %in% northeast ~ "Northeast",
                 state %in% midwest ~ "Midwest",
@@ -125,16 +123,17 @@ This summary tells us that on average US counties are within the standard. Howev
 ```{r}
 boxplot(pollution$meanPM2.5, col = "blue")
 ```
+
 Like the summary function, this shows us that the mean is around about ten, there are some counties not in compliance but most of them are.
 
 # Histogram
+
+The histogram gives a little bit more information about the distribution of the data. The "rug" plots all of the points below the histogram so you can see exactly where they are. This lets you see where the bulk of the data and the outliers are.
 
 ```{r}
 hist(pollution$meanPM2.5, col = "green")
 rug(pollution$meanPM2.5)
 ```
-
-The histogram gives a little bit more information about the distribution of the data. The "rug" plots all of the points below the histogram so you can see exactly where they are. This lets you see where the bulk of the data and the outliers are.
 
 You can change the number of breaks in the histogram to make the bars narrower and give a little more detail to the data distribution.
 
@@ -199,5 +198,69 @@ boxplot(meanPM2.5 ~ region, data = pollution, col = "red")
 ```
 
 
+### Multiple histograms
 
-(Timestamp 1:45)
+We can do the same thing with multiple histograms and we notice again that the average in the West tends to be lower but there is a greater spread.
+
+```{r}
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(subset(pollution, region == "Midwest")$meanPM2.5, col = "green")
+hist(subset(pollution, region == "Northeast")$meanPM2.5, col = "green")
+hist(subset(pollution, region == "Other")$meanPM2.5, col = "green")
+hist(subset(pollution, region == "South")$meanPM2.5, col = "green")
+hist(subset(pollution, region == "West")$meanPM2.5, col = "green")
+```
+
+### Scatterplot
+
+Here we have created a scatterplot of the distribution of mean PM2.5 according to the latitude of the monitor ... to see if there are any  north/south trends.
+PM2.5 seems to be higher in the middle latitudes and not as high in the lower and upper latitutes.
+
+```{r}
+pollution <- pollution_all_years %>%
+        mutate(region = case_when(
+                state %in% northeast ~ "Northeast",
+                state %in% midwest ~ "Midwest",
+                state %in% south ~ "South",
+                state %in% west ~ "West",
+                state %in% other ~ "Other"
+        )
+        ) %>%
+        group_by(county, state, region, latitude) %>%
+        summarise(meanPM2.5 = mean(PM2.5))
+
+with(pollution, plot(latitude, meanPM2.5))
+abline(h = 12, lwd = 2, lty = 2)
+```
+
+### Multiple scatterplots
+
+We can also plot multiple scatterplots.
+
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(pollution, region == "Midwest"), plot(latitude, meanPM2.5, main = "Midwest"))
+with(subset(pollution, region == "Northeast"), plot(latitude, meanPM2.5, main = "Northeast"))
+with(subset(pollution, region == "Other"), plot(latitude, meanPM2.5, main = "Other"))
+with(subset(pollution, region == "South"), plot(latitude, meanPM2.5, main = "South"))
+with(subset(pollution, region == "West"), plot(latitude, meanPM2.5, main = "West"))
+```
+
+
+## Summary
+
+Exploratory plots
+
+- are "quick and dirty"
+- let you summarise the data (usually graphically) and highlight any broad features
+- explore basic questions and hypotheses (and perhaps rule them out)
+- suggest modelling strategies for the "next step"
+
+
+
+
+
+
+
+
+
