@@ -1,0 +1,100 @@
+---
+title: "M4_W1_L2_Plotting"
+author: "Alexander Cormack"
+date: "7 November 2022"
+output: html_document
+---
+
+
+# Plotting Systems
+
+## The base plotting system
+
+The conceptual model used by the base plotting system is the "Artist's Palette" model, i.e. you start with a blank canvas and then you build from there. Every little piece of the plot is added to the plot one by one.
+
+This is fine if you are keeping track of the code for the plot so you can re-plot it again later.
+
+Generally you start with a plot function or similar and then you use annotation functions to add or modify elements of the plot (e.g. text, lines, points, axes)
+
+This approach is quite convenient, as it mirrors how we think of building plots and analysing data.
+
+One of the drawbacks though is that you can't go back once the plot has started (e.g. to adjust the margins); you need to plan in advance.
+
+It is difficult to "translate" to others once a new plot has been created as there is no graphical "language".
+
+Lastly, the plot is just a series of R commands
+
+
+Here we have a very simple base plot using the cars dataset - it shows the distance it takes a car to stop given a certain speed.
+
+```{r}
+library(datasets)
+data(cars)
+with(cars, plot(speed, dist))
+```
+
+From here you could do a lot of things, e.g. title, labels, different colored points, shapes, etc.
+
+
+## The lattice system
+
+- Plots are created with a single function call (xyplot, bwplot, etc.)
+- Most useful for conditioning types of plots: looking at how y changes with x across levels of z
+- Things like margins/spacing set automatically bacause entire plot is specified at once
+- Good for putting many many plots on a screen
+
+Some downsides
+
+- Sometimes awkward to specify an entire plot in a single function call
+- Annotation in plot is not especially intuitive
+- Use of panel functions and subscripts difficult to wield and requires intense preparation
+- Cannot "add" to the plot once it is created
+
+```{r}
+library(lattice)
+state <- data.frame(state.x77, region = state.region)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
+```
+
+
+## The ggplot2 system
+
+- Splits the difference between base and lattice in a number of ways
+- Automatically deals with spacings, text, titles but also allows you to annotate by "adding" to a plot
+- Superficial similarity to lattice but generally easier/more intuitive to use
+- Default mode makes many choices for you (but you can still customise to your heart's desire)
+
+
+Here is a simple ggplot2 graph using the miles per gallon dataset included in the library. It shows the displacement or size of an engine on the x axis and the mileage on the highway on the y axis. You can see that some of the default features are different from the other two systems.
+
+```{r}
+library(ggplot2)
+data(mpg)
+qplot(displ, hwy, data = mpg)
+```
+
+
+## Summary
+
+There are three basic plotting systems in R:
+
+- Base: "artist's palette" model
+- Lattice: entire plot specified by one function; conditioning
+- ggplot2: mixes elements of Base and Lattice
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
