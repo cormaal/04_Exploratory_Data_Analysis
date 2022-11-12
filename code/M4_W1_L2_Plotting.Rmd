@@ -304,6 +304,115 @@ Plotting occurs in two stages:
 The base plotting system is very flexible and offers a high degree of control over plottiing.
 
 
+# Base Plotting Demonstration
+
+We are going to play with some synthetic data to try out the base plotting functionalities.
+
+```{r}
+x <- rnorm(100)
+```
+```{r}
+hist(x)
+```
+
+We can see a number of defualt elements in the histogram ... axis labels and a title.
+```{r}
+y <- rnorm(100)
+```
+```{r}
+plot(x, y)
+```
+
+In this example we can see the default axes labels and the default plotting symbot (the open circle).
+
+If the above plot appeared in the plotting window we would also notice the default margins, i.e. 5 lines of text for the bottom margin, 4 lines of text for the left and top margin, and two lines of text for the right margin.
+
+The margins can be adjusted using the mar function.
+```{r}
+par(mar = c(2, 2, 2, 2))
+plot(x, y)
+```
+
+This has made the margins around the plot even, but it has also meant that there is no space available for the axes labels.
+
+Here we change the plotting symbol.
+```{r}
+plot(x, y, pch = 20)
+```
+
+There is a demo file that shows all of the points options
+
+```{r}
+example(points)
+```
+
+We can add a title, text, a legend or a line to the plot.
+```{r}
+x <- rnorm(100)
+y <- rnorm(100)
+plot(x, y)
+title("Scatterplot")
+text(-2, -2, "Label")
+legend("topleft", legend = "Data", pch = 20)
+fit <- lm(y ~ x)
+abline(fit, lwd = 2, col = "blue")
+```
+
+## Multiple scatterplots
+
+```{r}
+z <- rpois(100, 2)
+par(mfrow = c(1, 2))
+plot(x, y, pch = 20)
+plot(x, z, pch = 2)
+```
+
+The mfrow parameter adds the plots row-wise where as the mfcol parameter adds them column-wise.
+
+```{r}
+par(mfrow = c(2, 2))
+plot(x, y)
+plot(x, z)
+plot(z, x)
+plot(y, x)
+```
+```{r}
+par(mfcol = c(2, 2))
+plot(x, y)
+plot(x, z)
+plot(z, x)
+plot(y, x)
+```
+
+Lastly let's look at how you can annotate data points.
+```{r}
+par(mfrow = c(1, 1))
+x <- rnorm(100) # some synthetic data
+y <- x + rnorm(100) #some more synthetic data
+g <- gl(2, 50, labels = c("Male", "Female")) # a factor variable with two levels
+plot(x, y)
+```
+
+As it stands we can't really tell which data points are the males and which data points are the females.
+
+So we are going to build an empty plot and add the various elements one at a time.
+```{r}
+plot(x, y, type = "n")
+```
+```{r}
+plot(x, y, type = "n")
+points(x[g == "Male"], y[g == "Male"], col = "green", pch = 19)
+```
+```{r}
+plot(x, y, type = "n")
+points(x[g == "Male"], y[g == "Male"], col = "green", pch = 19)
+points(x[g == "Female"], y[g == "Female"], col = "blue")
+```
+
+
+
+
+
 
 
 
