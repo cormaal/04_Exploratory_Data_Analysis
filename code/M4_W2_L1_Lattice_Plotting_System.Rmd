@@ -1,0 +1,105 @@
+---
+title: "M4_W2_L1_Lattice_Plotting_System"
+author: "Alexander Cormack"
+date: "18 November 2022"
+output: html_document
+---
+
+# The Lattice Plotting System
+
+The lattice plotting system is implemented using the following packages:
+
+- *lattice*: contains code for producing  Trellis graphics, which are independent of the "base" graphics system; includes function like **xyplot**, **bwplot**, **levelplot**
+- *grid*: implements a different graphing system independent of the "base" system; the *lattice* package builds on top of *grid*
+    - we seldom call functions from the *grid* pacakage directly
+
+The lattice plotting system does not have a "two-phase" aspect with separate plotting and annotation like in base plotting
+
+All plotting/annotatin is done at once with a single function call
+
+
+## Lattice functions
+
+- **xyplot**: this is the main function for creating scatterplots
+- **bwplot**: box-and-whiskers plots (boxplots)
+- **histogram**: histograms
+- **stripplot**: like a boxplot but with actual points
+- **dotplot**: plot dots on "violin strings"
+- **splom**: scatterplot matrix; like **pairs** in base plotting system
+- **levelplot, contourplot**: for plotting "image" data
+
+Lattice functions generally take a formula for their first argument, usally of the form:
+
+xyplot(y ~ x | f * g, data)
+
+- we use the *formula notation** here, hence the tilde.
+- on the left of the tilde is teh y-axis variable, on the right is the x-axis varialbe
+- f and g are *conditioning variables* - they are optional
+    - the asterisk indicates an interaction between two variables
+- the second argument is the data frame or list from which the variables in the formula should be looked up
+    - if no data frame or list is passed, then the parent frame is used
+- if no other arguments are passed, there are defaults that can be used
+
+
+## Simple lattice plot
+
+```{r}
+library(lattice)
+library(datasets)
+xyplot(Ozone ~ Wind, data = airquality)
+```
+
+```{r}
+library(lattice)
+library(datasets)
+## Convert 'Month' to a factor variable
+airquality <- transform(airquality, Month = factor(Month))
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5, 1))
+```
+
+
+## Lattice behaviour
+
+Lattice functions behave differently from base graphics functions in one critical way. Base graphics functions plot data directly  to teh graphics device (screen, PDF file, etc.) whereas lattice graph functions return an object of class **trellis**.
+
+The print methods for lattice funcctions actually do the work of plotting the data on the graphics device.
+
+Lattice functions return "plot objects" tha can, in principle, be stored (but it's usally better to just save the code + data).
+
+On the command line, trellis objects are *auto-printed* so that it appears the function is plotting the data.
+
+```{r}
+p <- xyplot(Ozone ~ Wind, data = airquality) ## Nothing happens!
+```
+```{r}
+print(p) ## Plot appears
+```
+
+```{r}
+xyplot(Ozone ~ Wind, data = airquality) ## Auto-printing
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
