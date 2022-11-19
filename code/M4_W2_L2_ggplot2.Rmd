@@ -1,0 +1,112 @@
+---
+title: "M4_W2_L2_ggplot2"
+author: "Alexander Cormack"
+date: "2022-11-19"
+output: html_document
+---
+
+# ggplot2
+
+## What is ggplot2?
+
+An implementation of the *Grammar of Graphics* by Leland Wilkinson
+
+Written by Hadley Wickham (while he was a graduate student at Iowa State)
+
+A "third" graphics system for R (along with **base** and *lattice**)
+
+Available from CRAN via install.packages()
+
+Web site: http:/ggplot2.org (better documentation)
+
+Grammar of graphics represents an abstraction of graphics ideas/objects
+
+Think "verb", "noun", "adjective" for graphics
+
+Allows for a "theory" of graphics on which to build new graphics and graphics objects
+
+"Shorten the distance from mind to page"
+
+*In brief, the grammar tells us that a statistical graphic is a* **mapping** *from data to* **aesthetic** *attributes (colour, shape, size) of* **geometric** *objects (points, lines, bars). The plot may also contain statistical transformations of the data and is drawn on a specific coordinate system*
+(from *ggplot2* book)
+
+
+## The basics: qplot()
+
+Works much like the plot function in base graphics system
+
+Looks for data in a data frame, similar to lattice, or in the parent environment
+
+Plots are made up of *aesthetics* (size, shape, colour) and *geoms* (points, lines)
+
+Factors are important for indicating subsets of the data (if they have different properties); they should be **labeled**
+
+The qplot() hides what goes on underneath, which is okay for most operations
+
+ggplot() is the core function and very flexible for doing things qplot() cannot do
+
+
+```{r}
+library(ggplot2)
+str(mpg)
+```
+```{r}
+qplot(displ, hwy, data = mpg)
+```
+
+### Modifying aesthetics
+
+```{r}
+qplot(displ, hwy, data = mpg, color = drv)
+```
+
+We can add a statistic showing the general trend - the smoother is the blue line and the 95% confidence intervals are represented by the gray zone
+
+```{r}
+qplot(displ, hwy, data = mpg, geom = c("point", "smooth"))
+```
+
+We can also create a histogram by specifying a single variable
+
+```{r}
+qplot(hwy, data = mpg, fill = drv)
+```
+
+### Facets
+
+Facets are like panels in lattice. If you have a lot of data points that you want to separate out, using the colour scheme above may not be the best solution. It may be easier to separate them with facets.
+
+The facets function takes two arguments separated by a tilde. The argument on the left represents the rows, the argument on the right the columns.
+
+In the examples below the . indicates there is no other argument so there is only one row in the first plot and one column in the second plot.
+
+```{r}
+qplot(displ, hwy, data = mpg, facets = .~ drv)
+```
+
+```{r}
+qplot(hwy, data = mpg, facets = drv ~., binwidth = 2)
+```
+
+
+## Summary of qplot()
+
+The qplot() function is the analog to plot() but with many built-in features
+
+Syntax is somewhere between base/lattuce
+
+Produces nice graphics, essentially publication ready (if you like the design)
+
+Difficult to go against the grain/customise (don't bother - use ggplot2 power in that case)
+
+
+
+
+
+
+
+
+
+
+
+
