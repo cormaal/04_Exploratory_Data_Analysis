@@ -100,6 +100,203 @@ Produces nice graphics, essentially publication ready (if you like the design)
 Difficult to go against the grain/customise (don't bother - use ggplot2 power in that case)
 
 
+## Building plots with ggplot2
+
+When building plots in ggplot2 (rather than using qplot) the "artist's palette" model may be the closest analogy
+
+Plots are built up in layers
+
+- plot the data
+- overlay a summary
+- metadata and annotation
+
+The lecture uses the MAACS data ... I'll just copy some of the code from the examples.
+
+
+### Basic plot
+
+> qplot(logpm25, NocturnalSympt, data = maacs, facets = . ~ bmicat, geom = c("point", "smooth"), method = "lm")
+
+This creates a 2x1 plot (with body mass index categories, i.e. normal weight and overweight) with a trend line and confidence intervals.
+
+
+### Building up in layers
+
+> g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+
+> summary(g)
+
+>data: logpm25, bmicat, NocturnalSympt [554x3]
+
+> mapping: x = logpm25, y = NocturnalSympt
+
+> faceting: facet_null()
+
+### No plot yet!
+
+If we print the object g we will get an error because ggplot2 doesn't know how we want the plot to appear e.g. whether we want points or lines
+
+> print(g)
+
+> Error: No layers in plot
+
+We can add elements to the plot simply by using the plus symbol. The original g object has all the information that the geom_point() function will need.
+
+Here we explicitly save and print the ggplot object
+
+> p <- g + geom_point()
+
+> print(p)
+
+Here instead we simply auto-print the plot object without saving it
+
+> g + geom_point()
+
+
+### Adding more layers: smooth
+
+We can add a low-s smoother or add a method such as lm to include a linear regression line.
+
+> g + geom_point() + geom_smooth()
+
+> g + geom_point() + geom_smooth(method = "lm")
+
+
+### Adding more layers: facets
+
+When we add facets plot labels are automatically added from the faceting (factor) variable. In the case below, the faceting variable is the body mass index category where the labels are normal weight and overweight.
+
+> g + geom_point() + facet_grid(. ~ bmicat) + geom_smooth(method = "lm")
+
+
+### Annotation
+
+Labels: xlab(), ylab(), labs(), ggtitle()
+
+Each of the "geom" functions has options to modify
+
+For things that only make sense globally, use theme()
+
+- example: theme(legend.position = "none")
+
+Two standard appearance themese are included
+
+- theme_gray(): the default theme (gray background)
+- theme_bw(): more stark/plain
+
+
+### Modifying aesthetics
+
+We can change the colour of all of the points with constant values - all the points will appear steelblue and semi-transparent (the alpha variable)
+
+> g + geom_point(colour = "steelblue", size = 4, alpha = 1/2)
+
+Or we can use a data variable and the colour of the points will be different according to the variable - a legend will also automatically be added
+
+> g + geom_point(aes(colour = bmicat), size = 4, alpha = 1/2)
+
+
+### Modifying labels
+
+The labels can be easily modified with the labs() function. Note how mathematical notation is used to subscript the "2.5"
+
+> g + geom_point(aes(colour = bmicat)) + labs(title = "MAACS Cohort") + labs(x = expression("log " * PM[2.5]), y = "Nocturnal Symptoms)
+
+
+### Customising the smooth
+
+The smooth line has been made a little thicker, the linetype is dotted and the confidence intervals have been turned off
+
+> g + geom_point(aes(colour = bmicat), size = 2, alpha = 1/2) + geom_smooth(size = 4, linetype = 3, method = "lm", se = FALSE)
+
+
+### Changing the theme
+
+Here the background colours and font have been changed (the default is Helvetica)
+
+> g + geom_point(aes(colour = bmicat)) + theme_bw(base_family = "Times)
+
+
+### A note about axis limits
+
+The base plot and ggplot2 behave a little differently when faced with outliers. Typically when you have an outlier you don't want to highlight that, you want to set the axis limits to where the majority of the data are. Here we created some synthetic data with an outlier.
+```{r}
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50, 2] <- 100  ##Outlier!
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3, 3))
+```
+```{r}
+g <- ggplot(testdat, aes(x = x, y = y))
+g + geom_line()
+```
+
+If you add axis limits in ggplot2, the data are automatically subsetted to remove data that do not fall within the axis limits. Compare the above to the below.
+```{r}
+g + geom_line() + ylim(-3, 3)
+```
+
+To recreate the plot done with the base plot and include the outlier, you need to use the coord_cartesian() function
+```{r}
+g + geom_line() + coord_cartesian(ylim = c(-3, 3))
+```
+
+
+### A more complex example
+
+Imagine we want to see the relationship that exists with a continuous variable. In this case we cannot condition on a continuous variable because there would be an infinite number of plots. So what we need to do is to make the continuous variable categorical so we can condition on it in the plotting
+
+To do this we can use the cut() function
+
+Going back to the MAACS data set we might ask the question how does the relationship between PM2.5 and nocturnal symptoms vary by BMI and NO2?
+
+### Making NO2 tertiles
+
+First we need to calculate the deciles of the data
+
+> cutpoints <- quantile(maacs$logno2_new, seq(0, 1, length = 4), na.rm = TRUE)
+
+The we cut the data at the deciles and create a new factor variable
+
+> maacs$no2dec <- cut(maacs$logno2_new, cutpoints)
+
+Now we can see the levels of the newly created factor variable
+
+> levels(maacs$no2dec)
+
+> [1] "(0.378,1.2]" "(1.2,1.42]" "(1.42,2.55]"
+
+
+### Code for final plot
+
+First set up ggplot with data frame
+
+> g <- ggplot(maacs, aes(logpm25, NOcturnalSympt))
+
+Then add layers
+
+> g + geom_point(alpha = 1/3) + facet_wrap(bmicat ~ no2dec, nrow = 2, ncol = 4) + geom_smooth(method = "lm", se = FALSE, col = "steelblue) + theme_bw(base_family = "Avenir", base_size = 10) + labs(x = expression("log " * PM[2.5])) + labs(y = "Nocturnal Symptoms) + labs(title = "MAACS Cohort")
+
+- add semi-transparent points
+- make panels
+- add smoother without confidence bands
+- change the theme with different and slightly smaller font
+- add x label
+- add y label
+- add title
+
+
+### Summary
+
+ggplot2 is very powerful and flexible if you learn the "grammar" and the various elements that can be tuned/modified
+
+Many more types of plots can be made: explore and mess around with the package (references mentioned at the beginning of the lecture are useful)
+
+
+
+
+
+
+
 
 
 
