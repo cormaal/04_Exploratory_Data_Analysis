@@ -1,0 +1,142 @@
+---
+title: "M4_W3_L3_Working_With_Colour_In R_Plots"
+author: "Alexander Cormack"
+date: "2022-12-04"
+output: html_document
+---
+
+# Working With Colours In R Plots
+
+
+## Plotting and colour in R 
+
+- The default colour schemes for most plots in R are horrendous
+
+- Recently [sic] there have been developments to improve the handling / specification of colours in plots / graphs / etc.
+
+- There are functions in R and in external packages that are very handy
+
+
+## Colour utilities in R
+
+- The **grDevices** package has two functions
+    - colorRamp
+    - colorRampPalette
+
+- These functions take palettes of colours and help to interpolate between the colours
+
+- The function colors() lists the names of colours you can use in any plotting function
+
+
+## Colour palette utilities in R
+
+- colorRamp: take a palette of colours and return a function that takes values between 0 and 1, indicating the extremes of the colour palette (e.g., see the 'gray' function)
+
+- colorRampPalette: take a palette of colours and return a function that takes integer arguments and returns a vector of colours interpolating the palette (like heat.colors or topo.colors)
+
+
+### colorRamp
+
+```{r}
+pal <- colorRamp(c("red", "blue"))
+pal(0)
+```
+```{r}
+pal(1)
+```
+```{r}
+pal(0.5)
+```
+```{r}
+pal(seq(0, 1, len = 10))
+```
+
+### colorRampPalette
+
+```{r}
+pal <- colorRampPalette((c("red", "yellow")))
+pal(2)
+```
+```{r}
+pal(10)
+```
+
+
+## RColorBrewer package
+
+- One package on CRAN that contains interesting/useful colour palettes
+
+- There are three types of palettes:
+    - sequential
+    - diverging
+    - qualitative
+
+
+- Palette information can be used in conjunction with the colorRamp() and colorRampPalette() functions
+  
+  
+### RColorBrewer and colorRampPalette
+
+```{r}
+library(RColorBrewer)
+cols <- brewer.pal(3, "BuGn")
+cols
+```
+```{r}
+pal <- colorRampPalette(cols)
+image(volcano, col = pal(20))
+```
+
+### The smoothScatter function
+
+```{r}
+x <- rnorm(10000)
+y <- rnorm(10000)
+smoothScatter(x, y)
+```
+
+
+## Some other plotting notes
+
+- The rgb function can be used to produce any colour via proportions of red, green and blue
+
+- Colour transparency can be added via the alpha parameter to rgb
+
+- The **colorspace** package can be used for a different control over colours
+
+
+### Scatterplot with no transparency
+
+```{r}
+x <- rnorm(2000)
+y <- rnorm(2000)
+plot(x, y, pch = 19)
+```
+
+### Scatterplot with tranparency
+
+```{r}
+plot(x, y, col = rgb(0, 0, 0, 0.2), pch = 19)
+```
+
+
+## Summary
+
+- Careful use of colours in plots/maps/etc. can make it easier for the reader to get what you're trying to say (why make it harder?)
+
+- The **RColorBrewer** package is an R package that provides colour palettes for sequential, categorical and diverging data
+
+- The colorRamp and colorRampPalette functions can be used in conjunction with colour palettes to connect data to colours
+
+- Transparency can sometimes be used to clarify plots with many points
+
+
+
+
+
+
+
+
+
+
+
