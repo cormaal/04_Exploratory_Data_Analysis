@@ -1,0 +1,186 @@
+---
+title: "M4_W4_L1_Case_Studies"
+author: "Alexander Cormack"
+date: "2022-12-11"
+output: html_document
+---
+
+
+# Case Studies
+
+## Samsung human activity case study
+
+Data is sourced from the University of California Irvine Machine Learning Repository.
+
+### Slightly processed data
+
+For this lecture we will just use the training dataset ... here is some code to prepare the dataframe
+
+```{r}
+library(dplyr)
+
+feature_names <- read.table("./data/UCI_HAR_Dataset/features.txt")
+features <- feature_names$V2
+
+subject_train <- read.table("./data/UCI_HAR_Dataset/train/subject_train.txt")
+colnames(subject_train) <- "subject"
+
+activity_train <- read.table("./data/UCI_HAR_Dataset/train/y_train.txt")
+colnames(activity_train) <- "activity"
+
+activity_train$activity[activity_train$activity == 1] <- "walk"
+activity_train$activity[activity_train$activity == 2] <- "walkup"
+activity_train$activity[activity_train$activity == 3] <- "walkdown"
+activity_train$activity[activity_train$activity == 4] <- "sitting"
+activity_train$activity[activity_train$activity == 5] <- "standing"
+activity_train$activity[activity_train$activity == 6] <- "laying"
+
+train_measurements <- read.table("./data/UCI_HAR_Dataset/train/X_train.txt")
+colnames(train_measurements) <- features
+
+samsungData <- bind_cols(train_measurements, subject_train, activity_train) 
+```
+
+```{r}
+names(samsungData)[1:12]
+```
+```{r}
+table(samsungData$activity)
+```
+
+### Plotting average accelaration for first subject
+
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 1, 1))
+samsungData <- transform(samsungData, activity = factor(activity))
+sub1 <- subset(samsungData, subject == 1)
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+plot(sub1[, 2], col = sub1$activity, ylab = names(sub1)[2])
+legend("bottomright", legend = unique(sub1$activity), col = unique(sub1$activity), pch = 1)
+```
+
+### Clustering based just on average acceleration
+
+The cluster dendogram of average acceleration is not very informative ... all the colours are jumbled together so there is no clear differentiation between the different activities.
+
+```{r}
+source("myplclust.R")
+distanceMatrix <- dist(sub1[, 1:3])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+### Plotting maximum acceleration for the first subject
+
+Let's instead look at maximum acceleration for the first subject in the x and y directions (columns 10 & 11).
+
+We can see that there is little variability for the passive activities but much more variability for the active activities. So maximum acceleration may be a predictor for the active activities or at least for separating the passive from the active activities.
+
+```{r}
+par(mfrow = c(1, 2))
+plot(sub1[, 10], pch = 19, col = sub1$activity, ylab = names(sub1[10]))
+plot(sub1[, 11], pch = 19, col = sub1$activity, ylab = names(sub1[11]))
+```
+
+### Clustering data based on maximum acceleration
+
+Here we can see a clear separation between the passive and the active activities. Walkdown is clearly distinct but there is some mixing between walk and walkup and the passive activities are still quite jumbled
+
+```{r}
+source("myplclust.R")
+distanceMatrix <- dist(sub1[, 10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+legend("topright", legend = unique(sub1$activity), col = unique(sub1$activity), pch = 1)
+```
+
+### Singular value decomposition
+
+We remove the subject and the activity columns and perform singular value decomposition. The first singular value separates the values quite well, while the separation is a little more vague with the second singular value ... walkup is perhaps the most clearly separated activity.
+
+```{r}
+svd1 <- svd(scale(sub1[, -c(562:563)]))
+par(mfrow = c(1, 2))
+plot(svd1$u[, 1], col = sub1$activity, pch = 19)
+legend("bottomright", legend = unique(sub1$activity), col = unique(sub1$activity), pch = 1)
+plot(svd1$u[, 2], col = sub1$activity, pch = 19)
+```
+
+### Find the maximum contributor
+
+Let's now try to find the feature that contributes the most to the variation in the data. Here we are looking at the second right singular vector
+
+```{r}
+plot(svd1$v[, 2], pch = 19)
+```
+
+### New clustering with maximum contributor
+
+We can use the which.max() function to determine the feature that is the maximum contributor. The three active activities are now much more separated, but it didn't seem to help a lot with the passive activities.
+
+```{r}
+maxContrib <- which.max(svd1$v[, 2])
+distanceMatrix <- dist(sub1[, c(10:12, maxContrib)])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+So what is the maximum contributor? It is the mean body accelaration in the frequency domain in the z direction:
+
+```{r}
+names(samsungData[maxContrib])
+```
+
+### K-means clustering (nstart=1, first try)
+
+```{r}
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6)
+table(kClust$cluster, sub1$activity)
+```
+
+### K-means clustering (nstart = 1, second try)
+
+```{r}
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 1)
+table(kClust$cluster, sub1$activity)
+```
+
+### K-means clustering (nstart = 100, first try)
+
+```{r}
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
+```
+
+### K-means clustering (nstart = 100, second try)
+
+```{r}
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
+```
+
+### Cluster 1 variable centers (Laying)
+
+By looking at the cluster centers we can understand what are the features that drive the location of the cluster center. Here looking at laying we can see that the average acceleration in the three dimensions are the most significant. (Disclaimer - in the knitted file the graph may not show laying, since the centers are randomly allocated by kmeans and the laying center may not be the fifth row as it is in the .Rmd file)
+
+
+```{r}
+plot(kClust$center[5, 1:10], pch = 19, ylab = "Cluster Center", xlab = "")
+```
+
+### Cluster 2 variable centers (Walking)
+
+Instead when we look at walking we can see that there are other components that have an influence on where the center lies. This can give you a hint as to which features will be most interesting for predicting that activity.  (Disclaimer - in the knitted file the graph may not show walking, since the centers are randomly allocated by kmeans and the laying center may not be the second row as it is in the .Rmd file)
+
+```{r}
+plot(kClust$center[2, 1:10], pch = 19, ylab = "Cluster Center", xlab ="")
+```
+
+
+
+
+
+
+
+
+
